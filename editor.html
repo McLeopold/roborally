@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>RoboRally Board Editor</title>
+        <style>
+@media print
+{    
+    .no-print, .no-print *
+    {
+        display: none !important;
+    }
+}
+
+#current_square {
+    border: solid 1px black;
+    padding: 8px;
+    float: right;
+    background: #e0e0e0;
+    min-width: 500px;
+}
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <div id="current_square" class="no-print">
+                <rally-def :square="selected_square" inline-template>
+                    <div>
+                        <p>Grid Position: {{ square.row }},{{ square.col }}</p>
+                        <p>
+                            <input type="checkbox" id="pit" v-model="square.pit" /><label for="pit">Pit</label>
+                        </p>
+                        <p>
+                            <input type="checkbox" id="gear" v-model="square.gear" /><label for="gear">Gear</label>
+                            <input type="radio" id="gear_90" v-model="square.gear_dir" value="90" /><label for="gear_90">Clockwise</label>
+                            <input type="radio" id="gear_-90" v-model="square.gear_dir" value="-90" /><label for="gear_-90">Counter</label>
+                        </p>
+                        <p>
+                            <input type="checkbox" id="wrench" v-model="square.wrench" /><label for="wrench">Wrench</label>
+                        </p>
+                        <p>
+                            <input type="checkbox" id="belt" v-model="square.belt" /><label for="belt">Belt</label>
+                            <input type="checkbox" id="belt_fast" v-model="square.belt_fast" /><label for="belt_fast">Fast</label>
+                            <input type="radio" id="belt_dir_0" v-model="square.belt_dir" value="0" /><label for="belt_dir_0">0</label>
+                            <input type="radio" id="belt_dir_90" v-model="square.belt_dir" value="90" /><label for="belt_dir_90">90</label>
+                            <input type="radio" id="belt_dir_180" v-model="square.belt_dir" value="180" /><label for="belt_dir_180">180</label>
+                            <input type="radio" id="belt_dir_270" v-model="square.belt_dir" value="270" /><label for="belt_dir_270">270</label>
+                        </p>
+                        <p>
+                            <input type="checkbox" id="wall_0" v-model="square.wall_0" /><label for="wall_0">Wall 0</label>
+                            <input type="checkbox" id="wall_90" v-model="square.wall_90" /><label for="wall_90">Wall 90</label>
+                            <input type="checkbox" id="wall_180" v-model="square.wall_180" /><label for="wall_180">Wall 180</label>
+                            <input type="checkbox" id="wall_270" v-model="square.wall_270" /><label for="wall_270">Wall 270</label>
+                        </p>
+                        <p>
+                            <input type="checkbox" id="laser_0" v-model="square.laser_0" /><label for="laser_0">Laser 0</label>
+                            <input type="checkbox" id="laser_90" v-model="square.laser_90" /><label for="laser_90">Laser 90</label>
+                        </p>
+                    </div>
+                </rally-def>
+            </div>
+            <svg version="1.1" baseProfile="full" width="6.5in" height="6.5in" xmlns="http://www.w3.org/2000/wvg">
+                <defs>
+                    <g id="laser">
+                        <rect width="1in" height="0.01in" y="0.5in" fill="#ff4040" stroke="#ff4040" />
+                    </g>
+                    <g id="wall">
+                        <rect width="1in" height="0.1in" fill="#c0c040" stroke="#202020" />
+                    </g>
+                </defs>
+                <rect width="6in" height="6in" fill="grey" />
+                <rally-square
+                    v-for="square in grid"
+                    v-bind:key="square.key"
+                    v-on:square-selected="show_square($event)"
+                    :square="square"
+                    inline-template
+                >
+                <g :transform="'translate('+square.col*96+','+square.row*96+')'">
+                    <rect width="1in" height="1in" fill="none" stroke="black" />
+                    <g v-if="square.pit">
+                        <rect width=".5in" height=".5in" x="0.25in" y="0.25in" fill="#404040" />
+                        <polygon points="0,0 24,24 24,72 0,96" fill="#605040" stroke="#404040" />
+                        <polygon points="0,0 24,24 72,24 96,0" fill="#605040" stroke="#404040" />
+                        <polygon points="96,96 72,72 24,72 0,96" fill="#605040" stroke="#404040" />
+                        <polygon points="96,96 72,72 72,24 96,0" fill="#605040" stroke="#404040" />
+                    </g>
+                    <g v-if="square.wrench">
+                        <rect width="0.8in" height="0.8in" x="0.1in" y="0.1in" fill="#404040" stroke="#000000" />
+                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.15in" fill="#303030" stroke="#000000" />
+                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.25in" fill="#303030" stroke="#000000" />
+                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.35in" fill="#303030" stroke="#000000" />
+                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.45in" fill="#303030" stroke="#000000" />
+                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.55in" fill="#303030" stroke="#000000" />
+                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.65in" fill="#303030" stroke="#000000" />
+                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.75in" fill="#303030" stroke="#000000" />
+                        <path transform="translate(16,16)" d="M18 24 L48 54 C52 64 64 52 54 48 L20 14 C22 4 16 0 10 0 L10 2 L16 8 L14 14 L8 16 L2 10 L0 10 C0 16 4 22 14 20" fill="#507050" stroke="#408040" />
+                    </g>
+                    <g v-if="square.belt" :transform="'rotate('+square.belt_dir+' 48 48)'"
+                        :fill="square.belt_fast ? '#405080' : '#808040'"
+                        :stroke="square.belt_fast ? '#506090' : '#909050'">
+                        <rect width="0.5in" height="1in" x="0.25in" />
+                        <polygon points="48,24 64,40 56,40 56,72 40,72 40,40 32,40" stroke-width="4"/>
+                    </g>
+                    <g v-if="square.gear">
+                        <circle cx="48" cy="48" r="32" fill="#2040c0" stroke="#404080" />
+                        <circle cx="48" cy="48" r="8" fill="#c0c080" stroke="#404080" />
+                        <g v-if="square.gear_dir==90">
+                            <path transform="translate(-8,-8)" d='M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z' fill="#90c0c0" stroke="#808080" />
+                            <path transform="translate(8,8) rotate(180 48 48)" d='M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z' fill="#90c0c0" stroke="#808080" />
+                        </g>
+                        <g v-if="square.gear_dir==-90">
+                            <path transform="scale(-1,1) translate(-104,-8)" d="M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z" fill="#d0d0d0" stroke="#808080" />
+                            <path transform="scale(-1,1) translate(-88,8) rotate(180 48 48)" d="M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z" fill="#d0d0d0" stroke="#808080" />
+                        </g>
+                    </g>
+                    <g v-if="square.wall_0">
+                        <use xlink:href="#wall" />
+                    </g>
+                    <g v-if="square.wall_90" :transform="'rotate(90 48 48)'">
+                        <use xlink:href="#wall" />
+                    </g>
+                    <g v-if="square.wall_180" :transform="'rotate(180 48 48)'">
+                        <use xlink:href="#wall" />
+                    </g>
+                    <g v-if="square.wall_270" :transform="'rotate(270 48 48)'">
+                        <use xlink:href="#wall" />
+                    </g>
+                    <g v-if="square.laser_0">
+                        <use xlink:href="#laser" />
+                    </g>
+                    <g v-if="square.laser_90" :transform="'rotate(90 48 48)'">
+                        <use xlink:href="#laser" />
+                    </g>
+                    <rect width="1in" height="1in" fill-opacity="0" @click="$emit('square-selected',square)" />
+                </g>
+            </rally-square>
+            </svg>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script>
+Vue.component('rally-square', {
+    props: ['square'],
+    data() {
+        return {
+            key: 0
+        }
+    }
+})
+
+Vue.component('rally-def', {
+    props: ['square'],
+    data() {
+        return {
+            key: 0
+        }
+    }
+})
+
+var app = new Vue({
+    el: '#app',
+    data() {
+        return {
+            message: 'Hello Vue!',
+            grid: [],
+            selected_square: {}
+        }
+    },
+    created: function () {
+        for (var row = 0; row < 6; row++) {
+            for (var col = 0; col < 6; col++) {
+                var square = {
+                    row: row, 
+                    col: col
+                };
+                if (Math.random() < 0.15) square.pit = true;
+                else if (Math.random() < 0.1) square.wrench = true;
+                else {
+                    if (Math.random() < 0.25) {
+                        square.belt = true;
+                        square.belt_fast = Math.random() < 0.5;
+                        square.belt_dir = Math.floor(Math.random() * 4)*90;
+                    }
+                    else if (Math.random() < 0.25) {
+                        square.gear = true;
+                        square.gear_dir = Math.random() < 0.5 ? -90 : 90;
+                    }
+                    if (Math.random() < 0.05) square.wall_0 = true;
+                    if (Math.random() < 0.05) square.wall_90 = true;
+                    if (Math.random() < 0.05) square.wall_180 = true;
+                    if (Math.random() < 0.05) square.wall_270 = true;
+                }
+                if (Math.random() < 0.1) square.laser_0 = true;
+                if (Math.random() < 0.1) square.laser_90 = true;
+            this.grid.push(square);
+            }
+        }
+        this.selected_square = this.grid[0];
+    },
+    methods: {
+        show_square: function (square) {
+            this.selected_square = square;
+        }
+    },
+    watch: {
+        grid: function (n, old) {
+            console.log("changed");
+        }
+    }
+})
+        </script>
+    </body>
+</html>
