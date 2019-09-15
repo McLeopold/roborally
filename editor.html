@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@3.x/css/materialdesignicons.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
         <meta charset="utf-8">
         <title>RoboRally Board Editor</title>
         <style>
@@ -19,161 +23,332 @@
     background: #e0e0e0;
     min-width: 500px;
 }
+
+text {
+    font: bold 12px Calibri;
+}
         </style>
     </head>
     <body>
         <div id="app">
-            <div id="current_square" class="no-print">
-                <rally-def :square="selected_square" inline-template>
-                    <div>
-                        <p>Grid Position: {{ square.row }},{{ square.col }}</p>
-                        <p>
-                            <input type="checkbox" id="pit" v-model="square.pit" /><label for="pit">Pit</label>
-                        </p>
-                        <p>
-                            <input type="checkbox" id="gear" v-model="square.gear" /><label for="gear">Gear</label>
-                            <input type="radio" id="gear_90" v-model="square.gear_dir" value="90" /><label for="gear_90">Clockwise</label>
-                            <input type="radio" id="gear_-90" v-model="square.gear_dir" value="-90" /><label for="gear_-90">Counter</label>
-                        </p>
-                        <p>
-                            <input type="checkbox" id="wrench" v-model="square.wrench" /><label for="wrench">Wrench</label>
-                        </p>
-                        <p>
-                            <input type="checkbox" id="belt" v-model="square.belt" /><label for="belt">Belt</label>
-                            <input type="checkbox" id="belt_fast" v-model="square.belt_fast" /><label for="belt_fast">Fast</label>
-                            <input type="radio" id="belt_dir_0" v-model="square.belt_dir" value="0" /><label for="belt_dir_0">0</label>
-                            <input type="radio" id="belt_dir_90" v-model="square.belt_dir" value="90" /><label for="belt_dir_90">90</label>
-                            <input type="radio" id="belt_dir_180" v-model="square.belt_dir" value="180" /><label for="belt_dir_180">180</label>
-                            <input type="radio" id="belt_dir_270" v-model="square.belt_dir" value="270" /><label for="belt_dir_270">270</label>
-                        </p>
-                        <p>
-                            <input type="checkbox" id="wall_0" v-model="square.wall_0" /><label for="wall_0">Wall 0</label>
-                            <input type="checkbox" id="wall_90" v-model="square.wall_90" /><label for="wall_90">Wall 90</label>
-                            <input type="checkbox" id="wall_180" v-model="square.wall_180" /><label for="wall_180">Wall 180</label>
-                            <input type="checkbox" id="wall_270" v-model="square.wall_270" /><label for="wall_270">Wall 270</label>
-                        </p>
-                        <p>
-                            <input type="checkbox" id="laser_0" v-model="square.laser_0" /><label for="laser_0">Laser 0</label>
-                            <input type="checkbox" id="laser_90" v-model="square.laser_90" /><label for="laser_90">Laser 90</label>
-                        </p>
+            <v-app id="roborally">
+                <v-row>
+                    <v-col>
+                        <svg version="1.1" baseProfile="full" width="6.5in" height="6.5in" xmlns="http://www.w3.org/2000/wvg">
+                            <defs>
+                                <g id="laser">
+                                    <rect width="4" height="96" x="46" fill="#ff4040c0" />
+                                </g>
+                                <g id="wall">
+                                    <rect width="1in" height="0.1in" fill="#c0c040" stroke="#202020" />
+                                </g>
+                                <g id="pusher">
+                                    <rect width="1in" height="0.1in" fill="#c0c040" stroke="#202020" />
+                                    <rect width="0.6in" height="0.1in" x="0.2in" y="0.2in" fill="#c0c040" stroke="#202020" />
+                                    <rect width="0.1in" height="0.1in" x="0.3in" y="0.1in" fill="#000000" stroke="#202020" />
+                                    <rect width="0.1in" height="0.1in" x="0.6in" y="0.1in" fill="#000000" stroke="#202020" />
+                                </g>
+                            </defs>
+                            <rect width="6in" height="6in" fill="#d0d0d0" />
+                            <rally-square
+                                v-for="square in grid"
+                                v-bind:key="square.key"
+                                v-on:square-selected="show_square($event)"
+                                v-on:clear-board="clear_board()"
+                                :square="square"
+                                inline-template
+                            >
+                            <g :transform="'translate('+square.col*96+','+square.row*96+')'">
+                                <rect width="1in" height="1in" fill="none" stroke="black" />
+                                <g v-if="square.floor==='pit'">
+                                    <rect width=".5in" height=".5in" x="0.25in" y="0.25in" fill="#000000" />
+                                    <polygon points="0,0 24,24 24,72 0,96" fill="#605040" stroke="#404040" />
+                                    <polygon points="0,0 24,24 72,24 96,0" fill="#605040" stroke="#404040" />
+                                    <polygon points="96,96 72,72 24,72 0,96" fill="#605040" stroke="#404040" />
+                                    <polygon points="96,96 72,72 72,24 96,0" fill="#605040" stroke="#404040" />
+                                </g>
+                                <g v-if="square.floor==='trap'">
+                                    <rect width=".5in" height=".5in" x="0.25in" y="0.25in" fill="#404040" />
+                                    <polygon points="0,0 24,24 24,72 0,96" fill="#605040" stroke="#404040" />
+                                    <polygon points="96,96 72,72 72,24 96,0" fill="#605040" stroke="#404040" />
+                                    <polygon points="0,0 96,0 84,12 12,12" fill="#c0c040" stroke="#202020" />
+                                    <polygon points="0,0 0,96 12,84 12,12" fill="#c0c040" stroke="#202020" />
+                                    <polygon points="96,96 0,96 12,84 84,84" fill="#c0c040" stroke="#202020" />
+                                    <polygon points="96,96 96,0 84,12 84,84" fill="#c0c040" stroke="#202020" />
+                                    <path d='M12 12 L12 44 L15 44 L21 38 L27 38 L33 44 L39 44 L45 38 L51 38 L57 44 L63 44 L69 38 L75 38 L81 44 L84 44 L84 12 Z' fill="#c0c0c0" stroke="#202020" />
+                                    <path d='M12 84 L12 58 L15 58 L21 52 L27 52 L33 58 L39 58 L45 52 L51 52 L57 58 L63 58 L69 52 L75 52 L81 58 L84 58 L84 84 Z' fill="#c0c0c0" stroke="#202020" />
+                                    <g v-if="square.trap_reg.includes('1')" :transform="'rotate('+square.trap_dir+' 48 48)'">
+                                        <circle cx="24" cy="69" r="7" fill="#b0b0b0" stroke="#a0a0a0" />
+                                        <text x="24" y="69" dominant-baseline="middle" text-anchor="middle">1</text>
+                                    </g>
+                                    <g v-if="square.trap_reg.includes('2')" :transform="'rotate('+square.trap_dir+' 48 48)'">
+                                        <circle cx="36" cy="27" r="7" fill="#b0b0b0" stroke="#a0a0a0" />
+                                        <text x="36" y="27" dominant-baseline="middle" text-anchor="middle">2</text>
+                                    </g>
+                                    <g v-if="square.trap_reg.includes('3')" :transform="'rotate('+square.trap_dir+' 48 48)'">
+                                        <circle cx="48" cy="69" r="7" fill="#b0b0b0" stroke="#a0a0a0" />
+                                        <text x="48" y="69" dominant-baseline="middle" text-anchor="middle">3</text>
+                                    </g>
+                                    <g v-if="square.trap_reg.includes('4')" :transform="'rotate('+square.trap_dir+' 48 48)'">
+                                        <circle cx="60" cy="27" r="7" fill="#b0b0b0" stroke="#a0a0a0" />
+                                        <text x="60" y="27" dominant-baseline="middle" text-anchor="middle">4</text>
+                                    </g>
+                                    <g v-if="square.trap_reg.includes('5')" :transform="'rotate('+square.trap_dir+' 48 48)'">
+                                        <circle cx="72" cy="69" r="7" fill="#b0b0b0" stroke="#a0a0a0" />
+                                        <text x="72" y="69" dominant-baseline="middle" text-anchor="middle">5</text>
+                                    </g>
+                                </g>
+                                <g v-if="square.floor==='wrench'">
+                                    <rect width="0.8in" height="0.8in" x="0.1in" y="0.1in" fill="#404040" stroke="#000000" />
+                                    <rect width="0.7in" height="0.05in" x="0.15in" y="0.15in" fill="#303030" stroke="#000000" />
+                                    <rect width="0.7in" height="0.05in" x="0.15in" y="0.25in" fill="#303030" stroke="#000000" />
+                                    <rect width="0.7in" height="0.05in" x="0.15in" y="0.35in" fill="#303030" stroke="#000000" />
+                                    <rect width="0.7in" height="0.05in" x="0.15in" y="0.45in" fill="#303030" stroke="#000000" />
+                                    <rect width="0.7in" height="0.05in" x="0.15in" y="0.55in" fill="#303030" stroke="#000000" />
+                                    <rect width="0.7in" height="0.05in" x="0.15in" y="0.65in" fill="#303030" stroke="#000000" />
+                                    <rect width="0.7in" height="0.05in" x="0.15in" y="0.75in" fill="#303030" stroke="#000000" />
+                                    <path transform="translate(18,20)" d="M18 24 L48 54 C52 64 64 52 54 48 L20 14 C22 4 16 0 10 0 L10 2 L16 8 L14 14 L8 16 L2 10 L0 10 C0 16 4 22 14 20" fill="#507050" stroke="#408040" />
+                                    <path v-if="square.wrench_double" transform="translate(78,20) scale(-1,1)" d="M18 24 L48 54 C52 64 64 52 54 48 L20 14 C22 4 16 0 10 0 L10 2 L16 8 L14 14 L8 16 L2 10 L0 10 C0 16 4 22 14 20" fill="#507050" stroke="#408040" />
+                                </g>
+                                <g v-if="square.floor==='belt'" :transform="'rotate('+square.belt_dir+' 48 48)'"
+                                    :fill="square.belt_fast ? '#405080' : '#808040'"
+                                    :stroke="square.belt_fast ? '#506090' : '#909050'">
+                                    <rect width="0.5in" height="1in" x="0.25in" />
+                                    <polygon points="48,24 64,40 56,40 56,72 40,72 40,40 32,40" stroke-width="4"/>
+                                </g>
+                                <g v-if="square.floor==='gear'">
+                                    <circle cx="48" cy="48" r="32" fill="#2040c0" stroke="#404080" />
+                                    <circle cx="48" cy="48" r="8" fill="#c0c080" stroke="#404080" />
+                                    <g v-if="square.gear_dir">
+                                        <path transform="translate(-8,-8)" d='M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z' fill="#90c0c0" stroke="#808080" />
+                                        <path transform="translate(8,8) rotate(180 48 48)" d='M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z' fill="#90c0c0" stroke="#808080" />
+                                    </g>
+                                    <g v-if="!square.gear_dir">
+                                        <path transform="scale(-1,1) translate(-104,-8)" d="M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z" fill="#d0d0d0" stroke="#808080" />
+                                        <path transform="scale(-1,1) translate(-88,8) rotate(180 48 48)" d="M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z" fill="#d0d0d0" stroke="#808080" />
+                                    </g>
+                                </g>
+                                <g v-if="square.floor==='oil'">
+                                    <circle cx="48" cy="48" r="36" fill="#000000" />
+                                    <g v-if="square.oil_dir">
+                                    <rect v-if="square.oil_dir.includes('0')" x="12" y="0" width="72" height="48" fill="#000000" />
+                                    <rect v-if="square.oil_dir.includes('90')" x="48" y="12" width="48" height="72" fill="#000000" />
+                                    <rect v-if="square.oil_dir.includes('180')" x="12" y="48" width="72" height="48" fill="#000000" />
+                                    <rect v-if="square.oil_dir.includes('270')" x="0" y="12" width="48" height="72" fill="#000000" />
+                                    </g>
+                                </g>
+                                <g v-if="square.floor==='portal'">
+                                    <circle cx="48" cy="48" r="32" fill="#303030" stroke="#c0c0c0" stroke-width="3" />
+                                    <g v-for="x in [0,60,120,180,240,300]" :transform="'rotate('+x+' 48 48)'">
+                                        <rect x="36" y="17" width="24" height="6" :fill="square.portal_color" />
+                                        <circle cx="15" cy="48" r="9" :fill="square.portal_color" />
+                                    </g>
+                                </g>
+                                <g v-if="square.wall && square.wall.length>0">
+                                    <use v-if="square.wall.includes('0')" xlink:href="#wall" />
+                                    <use v-if="square.wall.includes('90')" xlink:href="#wall" :transform="'rotate(90 48 48)'" />
+                                    <use v-if="square.wall.includes('180')" xlink:href="#wall" :transform="'rotate(180 48 48)'" />
+                                    <use v-if="square.wall.includes('270')" xlink:href="#wall" :transform="'rotate(270 48 48)'" />
+                                </g>
+                                <g v-if="square.pusher" :transform="'rotate('+square.pusher+' 48 48)'">
+                                    <use xlink:href="#pusher" />
+                                    <text v-if="square.pusher_reg.includes('1')" x="0.25in" y="27" dominant-baseline="middle" text-anchor="middle">1</text>
+                                    <text v-if="square.pusher_reg.includes('2')" x="0.35in" y="27" dominant-baseline="middle" text-anchor="middle">2</text>
+                                    <text v-if="square.pusher_reg.includes('3')" x="0.45in" y="27" dominant-baseline="middle" text-anchor="middle">3</text>
+                                    <text v-if="square.pusher_reg.includes('4')" x="0.55in" y="27" dominant-baseline="middle" text-anchor="middle">4</text>
+                                    <text v-if="square.pusher_reg.includes('5')" x="0.65in" y="27" dominant-baseline="middle" text-anchor="middle">5</text>
+                                </g>
+                                <g v-if="square.laser">
+                                    <use v-if="square.laser.includes('0')" xlink:href="#laser" />
+                                    <use v-if="square.laser.includes('90')" xlink:href="#laser" :transform="'rotate(90 48 48)'" />
+                                </g>
+                                <rect v-if="square.water" width="1in" height="1in" fill="#0000ff80" />
+                                <rect width="1in" height="1in" fill-opacity="0" @click="$emit('square-selected',square)" />
+                            </g>
+                        </rally-square>
+                        </svg>
+                    </v-col>
+                    <v-col>
+                        <div id="current_square" class="no-print">
+                            <rally-def :square="selected_square" inline-template>
+                                <div>
+                                    <v-card>
+                                        <v-container>
+                                        <v-row>
+                                            <v-col>
+                                                <p>Floor Style</p>
+                                                <v-btn-toggle v-model="square.floor">
+                                                    <v-btn text value="open">Open</v-btn>
+                                                    <v-btn text value="pit">Pit</v-btn>
+                                                    <v-btn text value="wrench">Wrench</v-btn>
+                                                    <v-btn text value="belt">Belt</v-btn>
+                                                    <v-btn text value="gear">Gear</v-btn>
+                                                    <v-btn text value="oil">Oil</v-btn>
+                                                    <v-btn text value="portal">Portal</v-btn>
+                                                    <v-btn v-if="false" text value="ramp">Ramp</v-btn>
+                                                    <v-btn text value="trap">Trap</v-btn>
+                                                    <v-btn v-if="false" text value="randomizer">Randomizer</v-btn>
+                                                    <v-btn v-if="false" text value="teleporter">Teleporter</v-btn>
+                                                    <v-btn v-if="false" text value="current">Current</v-btn>
+                                                    <v-btn v-if="false" text value="drain">Drain</v-btn>
+                                                </v-btn-toggle>
+                                            </v-col>
+                                        </v-row>
+                                        <v-row v-if="square.floor==='wrench'">
+                                            <v-col>
+                                                <v-switch v-model="square.wrench_double" :label="`${square.wrench_double?'Single':'Double'}`"></v-switch>
+                                            </v-col>
+                                        </v-row>
+                                        <v-row v-if="square.floor==='belt'">
+                                            <v-col>
+                                                <v-switch v-model="square.belt_fast" :label="`Fast: ${square.belt_fast?'Yes':'No'}`"></v-switch>
+                                            </v-col>
+                                            <v-col>
+                                                <v-btn-toggle v-model="square.belt_dir">
+                                                    <v-btn text value="0">Up</v-btn>
+                                                    <v-btn text value="90">Right</v-btn>
+                                                    <v-btn text value="180">Down</v-btn>
+                                                    <v-btn text value="270">Left</v-btn>
+                                                </v-btn-toggle>
+                                            </v-col>
+                                            <div class="flex-grow-1"></div>
+                                        </v-row>
+                                        <v-row v-if="square.floor==='gear'">
+                                            <v-col>
+                                                <v-switch v-model="square.gear_dir" :label="`Direction: ${square.gear_dir?'Clockwise':'Counter-clockwise'}`"></v-switch>
+                                            </v-col>
+                                        </v-row>
+                                        <v-row v-if="square.floor==='oil'">
+                                            <v-col>
+                                                <v-btn-toggle multiple v-model="square.oil_dir">
+                                                    <v-btn text value="0">Up</v-btn>
+                                                    <v-btn text value="90">Right</v-btn>
+                                                    <v-btn text value="180">Down</v-btn>
+                                                    <v-btn text value="270">Left</v-btn>
+                                                </v-btn-toggle>        
+                                            </v-col>
+                                        </v-row>
+                                        <v-row v-if="square.floor==='portal'">
+                                            <v-col>
+                                                <p>Color</p>
+                                                <v-color-picker v-model="square.portal_color" class="ma-2" mode="hex" hide-mode-switch hide-canvas hide-inputs :swatches="swatches" show-swatches></v-color-picker>
+                                            </v-col>
+                                        </v-row>
+                                        <v-row v-if="square.floor==='trap'">
+                                            <v-col>
+                                                <p>Register</p>
+                                                <v-btn-toggle multiple v-model="square.trap_reg">
+                                                    <v-btn text value="1">1</v-btn>
+                                                    <v-btn text value="2">2</v-btn>
+                                                    <v-btn text value="3">3</v-btn>
+                                                    <v-btn text value="4">4</v-btn>
+                                                    <v-btn text value="5">5</v-btn>
+                                                </v-btn-toggle>
+                                            </v-col>
+                                        </v-row>
+                                        <v-row>
+                                            <v-col>
+                                                <p>Walls</p>
+                                                <v-btn-toggle multiple v-model="square.wall">
+                                                    <v-btn text value="0">Up</v-btn>
+                                                    <v-btn text value="90">Right</v-btn>
+                                                    <v-btn text value="180">Down</v-btn>
+                                                    <v-btn text value="270">Left</v-btn>
+                                                </v-btn-toggle>
+                                            </v-col>
+                                            <v-col>
+                                                <p>Lasers</p>
+                                                <v-btn-toggle multiple v-model="square.laser">
+                                                    <v-btn text value="0">Up</v-btn>
+                                                    <v-btn text value="90">Right</v-btn>
+                                                </v-btn-toggle>
+                                            </v-col>
+                                            <v-col>
+                                                <v-switch v-model="square.water" :label="`Water: ${square.water?'Yes':'No'}`"></v-switch>
+                                            </v-col>
+                                            <div class="flex-grow-1"></div>
+                                        </v-row>
+                                        <v-row>
+                                            <v-col>
+                                                <p>Pusher</p>
+                                                <v-btn-toggle v-model="square.pusher">
+                                                    <v-btn text value="0">Up</v-btn>
+                                                    <v-btn text value="90">Right</v-btn>
+                                                    <v-btn text value="180">Down</v-btn>
+                                                    <v-btn text value="270">Left</v-btn>
+                                                </v-btn-toggle>
+                                            </v-col>
+                                            <v-col>
+                                                <p>Register</p>
+                                                <v-btn-toggle multiple v-model="square.pusher_reg">
+                                                    <v-btn text value="1">1</v-btn>
+                                                    <v-btn text value="2">2</v-btn>
+                                                    <v-btn text value="3">3</v-btn>
+                                                    <v-btn text value="4">4</v-btn>
+                                                    <v-btn text value="5">5</v-btn>
+                                                </v-btn-toggle>
+                                            </v-col>        
+                                        </v-row>
+                                        </v-container>
+                                    </v-card>
+                                    <p>Grid Position: {{ square.row }},{{ square.col }}</p>
+                                </div>
+                            </rally-def>
                     </div>
-                </rally-def>
-            </div>
-            <svg version="1.1" baseProfile="full" width="6.5in" height="6.5in" xmlns="http://www.w3.org/2000/wvg">
-                <defs>
-                    <g id="laser">
-                        <rect width="1in" height="0.01in" y="0.5in" fill="#ff4040" stroke="#ff4040" />
-                    </g>
-                    <g id="wall">
-                        <rect width="1in" height="0.1in" fill="#c0c040" stroke="#202020" />
-                    </g>
-                </defs>
-                <rect width="6in" height="6in" fill="grey" />
-                <rally-square
-                    v-for="square in grid"
-                    v-bind:key="square.key"
-                    v-on:square-selected="show_square($event)"
-                    :square="square"
-                    inline-template
-                >
-                <g :transform="'translate('+square.col*96+','+square.row*96+')'">
-                    <rect width="1in" height="1in" fill="none" stroke="black" />
-                    <g v-if="square.pit">
-                        <rect width=".5in" height=".5in" x="0.25in" y="0.25in" fill="#404040" />
-                        <polygon points="0,0 24,24 24,72 0,96" fill="#605040" stroke="#404040" />
-                        <polygon points="0,0 24,24 72,24 96,0" fill="#605040" stroke="#404040" />
-                        <polygon points="96,96 72,72 24,72 0,96" fill="#605040" stroke="#404040" />
-                        <polygon points="96,96 72,72 72,24 96,0" fill="#605040" stroke="#404040" />
-                    </g>
-                    <g v-if="square.wrench">
-                        <rect width="0.8in" height="0.8in" x="0.1in" y="0.1in" fill="#404040" stroke="#000000" />
-                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.15in" fill="#303030" stroke="#000000" />
-                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.25in" fill="#303030" stroke="#000000" />
-                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.35in" fill="#303030" stroke="#000000" />
-                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.45in" fill="#303030" stroke="#000000" />
-                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.55in" fill="#303030" stroke="#000000" />
-                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.65in" fill="#303030" stroke="#000000" />
-                        <rect width="0.7in" height="0.05in" x="0.15in" y="0.75in" fill="#303030" stroke="#000000" />
-                        <path transform="translate(16,16)" d="M18 24 L48 54 C52 64 64 52 54 48 L20 14 C22 4 16 0 10 0 L10 2 L16 8 L14 14 L8 16 L2 10 L0 10 C0 16 4 22 14 20" fill="#507050" stroke="#408040" />
-                    </g>
-                    <g v-if="square.belt" :transform="'rotate('+square.belt_dir+' 48 48)'"
-                        :fill="square.belt_fast ? '#405080' : '#808040'"
-                        :stroke="square.belt_fast ? '#506090' : '#909050'">
-                        <rect width="0.5in" height="1in" x="0.25in" />
-                        <polygon points="48,24 64,40 56,40 56,72 40,72 40,40 32,40" stroke-width="4"/>
-                    </g>
-                    <g v-if="square.gear">
-                        <circle cx="48" cy="48" r="32" fill="#2040c0" stroke="#404080" />
-                        <circle cx="48" cy="48" r="8" fill="#c0c080" stroke="#404080" />
-                        <g v-if="square.gear_dir==90">
-                            <path transform="translate(-8,-8)" d='M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z' fill="#90c0c0" stroke="#808080" />
-                            <path transform="translate(8,8) rotate(180 48 48)" d='M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z' fill="#90c0c0" stroke="#808080" />
-                        </g>
-                        <g v-if="square.gear_dir==-90">
-                            <path transform="scale(-1,1) translate(-104,-8)" d="M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z" fill="#d0d0d0" stroke="#808080" />
-                            <path transform="scale(-1,1) translate(-88,8) rotate(180 48 48)" d="M48 48 L48 42 S42 42 42 48 L36 48 S36 36 48 36 L48 32 L56 40 Z" fill="#d0d0d0" stroke="#808080" />
-                        </g>
-                    </g>
-                    <g v-if="square.wall_0">
-                        <use xlink:href="#wall" />
-                    </g>
-                    <g v-if="square.wall_90" :transform="'rotate(90 48 48)'">
-                        <use xlink:href="#wall" />
-                    </g>
-                    <g v-if="square.wall_180" :transform="'rotate(180 48 48)'">
-                        <use xlink:href="#wall" />
-                    </g>
-                    <g v-if="square.wall_270" :transform="'rotate(270 48 48)'">
-                        <use xlink:href="#wall" />
-                    </g>
-                    <g v-if="square.laser_0">
-                        <use xlink:href="#laser" />
-                    </g>
-                    <g v-if="square.laser_90" :transform="'rotate(90 48 48)'">
-                        <use xlink:href="#laser" />
-                    </g>
-                    <rect width="1in" height="1in" fill-opacity="0" @click="$emit('square-selected',square)" />
-                </g>
-            </rally-square>
-            </svg>
+                    </v-col>
+                </v-row>
+            </v-app>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>        
         <script src="https://d3js.org/d3.v5.min.js"></script>
         <script>
 Vue.component('rally-square', {
     props: ['square'],
-    data() {
-        return {
-            key: 0
-        }
-    }
 })
 
 Vue.component('rally-def', {
     props: ['square'],
     data() {
         return {
-            key: 0
+            swatches: [
+                ['#F82231'],
+                ['#F1A511'],
+                ['#DAE657'],
+                ['#56A75B'],
+                ['#4864D5'],
+                ['#851543'],
+            ],
         }
     }
 })
 
 var app = new Vue({
     el: '#app',
+    vuetify: new Vuetify(),
     data() {
         return {
-            message: 'Hello Vue!',
             grid: [],
             selected_square: {}
         }
+    },
+    ready: function () {
+        window.addEventListener('keyup', this.toggle_belt)
     },
     created: function () {
         for (var row = 0; row < 6; row++) {
             for (var col = 0; col < 6; col++) {
                 var square = {
                     row: row, 
-                    col: col
+                    col: col,
+                    floor: 'open',
+                    pusher: null,
+                    pusher_reg: [],
+                    trap_reg: [],
+                    oil_dir: [],
+                    portal_color: '#F82231',
                 };
+                /*
                 if (Math.random() < 0.15) square.pit = true;
                 else if (Math.random() < 0.1) square.wrench = true;
                 else {
@@ -193,6 +368,7 @@ var app = new Vue({
                 }
                 if (Math.random() < 0.1) square.laser_0 = true;
                 if (Math.random() < 0.1) square.laser_90 = true;
+                */
             this.grid.push(square);
             }
         }
