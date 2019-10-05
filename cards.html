@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta charset="utf-8">
+        <title>Card Design</title>
+        <style>
+@media print
+{    
+    .no-print, .no-print *
+    {
+        display: none !important;
+    }
+}
+        </style>
+    </head>
+    <body>
+        <div id="app">
+<!--        
+			<svg version="1.1" baseProfile="full" width="6.5in" height="6.5in" xmlns="http://www.w3.org/2000/wvg">
+				<defs>
+					<g id="laser">
+						<rect width="4" height="96" x="46" fill="#ff4040c0" />
+					</g>
+				</defs>
+				<rect width="6in" height="6in" fill="#d0d0d0" />
+				<g :transform="'translate('+square.col*96+','+square.row*96+')'">
+					<rect width="1in" height="1in" fill="none" stroke="black" />
+					<g v-if="square.floor==='pit'">
+						<polygon points="0,0 24,24 24,72 0,96" fill="#605040" stroke="#404040" />
+					</g>
+					<g v-if="square.floor==='trap'">
+						<path d='M12 12 L12 44 L15 44 L21 38 L27 38 L33 44 L39 44 L45 38 L51 38 L57 44 L63 44 L69 38 L75 38 L81 44 L84 44 L84 12 Z' fill="#c0c0c0" stroke="#202020" />
+							<circle cx="24" cy="69" r="7" fill="#b0b0b0" stroke="#a0a0a0" />
+						<use v-if="square.wall.includes('0')" xlink:href="#wall" />
+			</svg>
+			-->
+			<svg width="748" height="1006" xmlns="http://www.w3.org/2000/wvg">
+				<rect width="100%" height="100%" fill="#f0f0f0" />
+				<metaero-card inline-template v-for="(card, index) in cards" :key="index" :card="card" :index="index">
+					<g :transform="'translate('+card_pos[index].x+','+card_pos[index].y+')'" stroke="none" fill="none" font-family="sans-serif">
+						<rect width="248" height="334" :stroke="ilk_theme[card.ilk].border_stroke" :fill="ilk_theme[card.ilk].border_fill" />
+						<rect width="224" height="310" x="12" y="12" :stroke="ilk_theme[card.ilk].border_stroke" fill="#ffffff" />
+												
+						<rect width="220" height="90" x="14" y="228" stroke="#ffffff" fill="#ffffff" />
+						<text v-for="(effect, effect_index) in card.effects" :key="effect_index"
+							x="24" :y="244+effect_index*(24*(card.effects_em || 1))" dominant-baseline="middle" text-anchor="left" fill="#000000" :font-size="(card.effects_em || 1)+'em'">{{effect}}</text>
+						
+						<g v-if="card.purchase_req">
+							<rect width="100" height="24" x="128" y="24" :stroke="ilk_theme[card.ilk].border_stroke" :fill="ilk_theme[card.ilk].border_fill" />
+							<text x="134" y="36" dominant-baseline="middle" text-anchor="left" fill="#000000" font-size=".75em">{{card.purchase_req}}</text>
+						</g>
+
+						<g v-if="card.station_reqs">
+							<rect width="176" height="24" x="36" y="180" :stroke="ilk_theme[card.ilk].border_stroke" :fill="ilk_theme[card.ilk].border_fill" />
+							<text x="124" y="190" dominant-baseline="middle" text-anchor="middle" fill="#000000" font-size=".75em">{{card.station_reqs.join(' + ')}}</text>
+						</g>
+						
+						<circle cx="212" cy="36" r="20" :stroke="ilk_theme[card.ilk].border_stroke" :fill="ilk_theme[card.ilk].border_fill" />
+						<text x="212" y="38" dominant-baseline="middle" text-anchor="middle" fill="#000000" font-size="2em">{{card.cost}}</text>
+						<text x="212" y="34" dominant-baseline="middle" text-anchor="middle" fill="#000000" font-size="5.1em">{{'\ud83d\udf1b'}}</text>
+
+						<rect width="200" height="24" x="24" y="200" :stroke="ilk_theme[card.ilk].border_stroke" :fill="ilk_theme[card.ilk].border_fill" />
+						<text x="124" y="212" dominant-baseline="middle" text-anchor="middle" fill="#000000">{{card.ilk}} - {{card.name}}</text>
+
+						<circle cx="24" cy="24" r="17" :stroke="ilk_theme[card.ilk].border_stroke" :fill="ilk_theme[card.ilk].border_fill" />
+						<text x="24" y="25" dominant-baseline="middle" text-anchor="middle" fill="#000000" :font-size="ilk_theme[card.ilk].ilk_em+'em'">{{ilk_theme[card.ilk].ilk_symbol}}</text>
+				
+					</g>
+				</metaero-card>
+			</svg>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>        
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script>
+var card_width = 250;
+var card_height = 336;
+var card_list = {
+	Fighter: {
+		id:0,
+		name:"Fighter",
+		ilk:"Ship",
+		power: 1,
+		cost: 2,
+		//req: "Shipyard",
+		effects: ["Gain 1 \u2694.", "Draw a card."],
+	},
+	Destroyer: {
+		id:1,
+		name:"Destroyer",
+		ilk:"Ship",
+		power: 1,
+		cost: 3,
+		purchase_req: "Shipyard",
+		effects: ["Gain 3 \u2694."],
+	},
+	Carrier: {
+		id:1,
+		name:"Carrier",
+		ilk:"Ship",
+		power: 1,
+		cost: 5,
+		purchase_req: "Shipyard",
+		effects: ["Gain 3 \u2694.", "Draw a card."],
+	},
+	Solar: {
+		id:1,
+		name:"Solar",
+		ilk:"Station",
+		cost: 2,
+		//req: "",
+		effects: ["Twice per turn:", "gain 1\ud83d\udf1b or support 1\ud83d\udef0"],
+	},
+	Mine: {
+		id:1,
+		name:"Mine",
+		ilk:"Station",
+		cost: 2,
+		//req: "",
+		effects: ["Twice per turn:", "gain 1\ud83d\udf1b or support 1\ud83d\udef0"],
+	},
+	Farm: {
+		id:1,
+		name:"Farm",
+		ilk:"Station",
+		cost: 3,
+		//req: "",
+		effects: ["Twice per turn:", "support 1\ud83d\udef0"],
+	},
+	Shipyard: {
+		id:1,
+		name:"Shipyard",
+		ilk:"Station",
+		cost: 4,
+		station_reqs: ["Solar", "Mine"],
+		effects: ["Once per turn:", "gain 1\uD83D\uDEE6 and support 1\ud83d\udef0"],
+	},
+	Academy: {
+		id:1,
+		name:"Academy",
+		ilk:"Station",
+		cost: 5,
+		station_reqs: ["Solar", "Farm"],
+		effects: ["Once per turn:", "gain 1\uD83D\uDC64 and support 1\ud83d\udef0"],
+	},
+	Research: {
+		id:1,
+		name:"Research",
+		ilk:"Station",
+		cost: 6,
+		station_reqs: ["Solar", "Academy"],
+		effects: ["Once per turn if this station is empty", "gain 1\ud83d\udd2c card and place on on top", "of this station. Put the \ud83d\udd2c card in your", "discard when you can pay the cost."],
+		effects_em: .75,
+	},
+};
+var card_set_1 = [
+	card_list.Fighter,
+	card_list.Destroyer,
+	card_list.Carrier,
+	
+	card_list.Solar,
+	card_list.Mine,
+	card_list.Farm,
+	
+	card_list.Shipyard,
+	card_list.Academy,
+	card_list.Research,
+];
+
+Vue.component('metaero-card', {
+    props: ['card', 'index'],
+    data() {
+		return {
+		// 248x344
+            card_pos: [
+				{x:0,y:0},
+				{x:card_width,y:0},
+				{x:card_width*2,y:0},
+				{x:0,y:card_height},
+				{x:card_width,y:card_height},
+				{x:card_width*2,y:card_height},
+				{x:0,y:card_height*2},
+				{x:card_width,y:card_height*2},
+				{x:card_width*2,y:card_height*2},
+            ],
+            ilk_theme: {
+				'Ship': {
+					border_stroke: '#000000',
+					border_fill: '#808080',
+					ilk_symbol: '\ud83d\udee6',
+					ilk_em: 2,
+				},
+				'Station': {
+					border_stroke: '#103020',
+					border_fill: '#709080',
+					ilk_symbol: '\ud83d\udef0',
+					ilk_em: 2,
+				},
+				'Recruit': {
+					border_stroke: '#808080',
+					border_fill: '#f0f0f0',
+					ilk_symbol: '\ud83d\udc64',
+					ilk_em: 1,
+				},
+				'Research': {
+					border_stroke: '#301020',
+					border_fill: '#907080',
+					ilk_symbol: '\ud83d\udd2c',
+					ilk_em: 1,
+				},
+								
+				'Unknown': {
+					border_stroke: '#102030',
+					border_fill: '#708090',
+					ilk_symbol: '?',
+					ilk_em: 1,
+				},
+            }
+		}
+    }
+})
+
+var app = new Vue({
+    el: '#app',
+    //vuetify: new Vuetify(),
+    data() {
+        return {
+            cards: card_set_1,
+        }
+    },
+    created: function () {
+		for (var i = 0; i < this.cards.length; i++) {
+			this.cards[i].ilk = this.cards[i].ilk || 'Unknown';
+		}
+    },
+    methods: {
+    },
+    watch: {
+    }
+})
+
+
+        </script>
+    </body>
+</html>
